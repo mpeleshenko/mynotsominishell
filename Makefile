@@ -3,7 +3,10 @@
 
 NAME = mynotsominishell
 
-SRC = mynotsominishell.c
+SRC = terminal.c \
+	display.c \
+	input.c \
+	mynotsominishell.c
 OBJ = $(SRC:.c=.o)
 
 LIBPATH = ../lib
