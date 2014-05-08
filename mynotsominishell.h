@@ -17,7 +17,7 @@
 #define BUF_SZ 256
 
 #define READTIME 1
-/* used to return from read after 1/10th of  second passed from the first byte read */
+/* used to return from read after 1/10th of second passed from the first byte read */
 
 #define READMIN 3
 /* used to return from read if 3 bytes have been read. Needed for things like characters which are \E[A B C or D */
@@ -28,91 +28,86 @@
 
 #define SPACEBAR " "
 #define ESC "\E"
+#define BACKSPACE 127
 #define ENTER "\n"
+#define CTRL_A 1
+#define CTRL_E 5
+#define CTRL_K 11
+#define CTRL_L 12
+#define CTRL_Y 25
 #define KU "\E[A"
 #define KD "\E[B"
 #define KR "\E[C"
 #define KL "\E[D"
-// #define UP "ku"
-// #define DOWN "kd"
-// #define LEFT "kl"
-// #define RIGHT "kr"
 #define CLEAR "cl"
 #define MOVE "cm"
-#define STANDOUT "so"
-#define STAND_END "se"
-#define UNDERLINE "us"
-#define UNDER_END "ue"
-#define CURSOROFF "vi"
-#define CURSORON "ve"
-#define VECAP "\E[?25h" // actual string for VE in case tgetstr doesn't find it
-#define VICAP "\E[?25l" // same as above but for VI
-// #define ESC 27
+#define MOVE_LEFT "le"
+#define MOVE_RIGHT "nd"
+#define MOVE_DOWN "do"
+#define MOVE_START "cr" /* move to start of line */
+#define DEL_CHAR "dc"
+#define VECAP "\E[?25h" /* actual string for VE in case tgetstr doesn't find it */
+#define VICAP "\E[?25l" /* same as above but for VI */
 
-typedef struct	s_elem
+typedef struct s_elem
 {
-  char		*elem;
-  int		size;
-  int		x;
-  int		y;
-  int		mode; /* 0 for normal, 1 for highlighted */
-}		t_elem;
+	char *elem;
+	int	size;
+}	t_elem;
 
-typedef struct	s_env
+typedef struct s_env
 {
-  // char		*left;
-  // char		*right;
-  // char		*up;
-  // char		*down;
-  // char		*esc;
-  // char		*underline;
-  // char		*under_end;
-  // char		*standout;
-  // char		*stand_end;
-  char		*move;
-  char		*clear;
-  // char		*cursoroff;
-  // char		*cursoron;
-  struct winsize win;
-  struct termio	line_backup;
-  int		flag;
-  int		stdio_backup;
-  int		nbelems;
-  int		pos;
-  char *curr_dir; /* current directory path */
-  unsigned int curr_dir_length; /* length of current directory path */
-  
-  // t_elem	*elements;
-}		t_env;
+	char *move;
+	char *clear;
+	char *delete_char;
+	char *move_left;
+	char *move_right;
+	char *move_down;
+	char *move_start;
+	struct winsize win;
+	struct termio line_backup;
+	int	flag;
+	int	stdio_backup;
+	int	nbelems; /* number of commands in history */
+	int pos; /* position of cursor relative to command's first character */
+	unsigned int cursor_col; /* column of cursor */
+	t_elem curr_dir; /* current directory path */
+	t_elem cmd_buffer; /* buffer for current command */
+	t_elem *curr_cmd; /* pointer to command being displayed */
 
-t_env	gl_env;
-// created as a structure to limit number of globals to 1
+	// t_elem *elements; /* represents command history */
+} t_env;
 
-void	init_terminal();
-void	restore_terminal();
-char	*term_get_cap(char*);
-void	init_caps();
+t_env gl_env;
+/* created as a structure to limit number of globals to 1 */
+
+void init_terminal();
+void restore_terminal();
+char *term_get_cap(char*);
+void init_caps();
 int	my_termprint(int);
-void	term_clear();
-void	term_vi();
-void	term_ve();
-char	check_character(char *c);
-char	get_win_size();
-void	show_elems();
-void	refreshin();
-void	refreshout(int);
-void	moveup();
-void	movedown();
-void	moveleft();
-void	moveright();
-void	doselect();
-void	getout(/*char*/);
-void	setup_elems(int, char**);
-// char	check_char(char*);
-void  term_move(int, int);
-void	term_move_to_item(int);
-void	term_underline();
-void	term_standout();
-void	term_standend();
-void	term_underend();
+void term_clear();
+void check_character(char *c);
+void check_command();
+void add_character(char c);
+void remove_character(unsigned int);
+char get_win_size();
+void show_prompt();
+void refreshin();
+void refreshout(int);
+void moveup();
+void movedown();
+void moveleft();
+void moveright();
+void getout();
+
+void setup_env();
+void set_curr_dir();
+void print_prompt();
+void print_cmd();
+
+void term_move(int, int);
+void term_move_to_item(int);
+void term_move_left();
+void term_move_right();
 #endif

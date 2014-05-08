@@ -18,7 +18,7 @@ void init_terminal()
 
 	line.c_cc[VMIN] = READMIN; 
 	line.c_cc[VTIME] = READTIME;
-	line.c_lflag &= ~(ICANON | /*ECHO |*/ ISIG); /* Set terminal to noncanonical and disable echo and signals */
+	line.c_lflag &= ~(ICANON | ECHO | ISIG); /* Set terminal to noncanonical and disable echo and signals */
 	ioctl(0, TCSETA, &line); /* apply changes to terminal config */
 
 	/* Change STDOUT I/O to TERM */
@@ -27,7 +27,6 @@ void init_terminal()
 	gl_env.stdio_backup = dup(1); /* Save STDOUT */
 	dup2(fd, 1); /* 1 now points to TERM */
 
-	// term_vi(); /* Make cursor invisible */
 }
 
 /* pre : terminal configs were backed up
@@ -36,7 +35,6 @@ void init_terminal()
 void restore_terminal()
 {
 	term_clear();
-	// term_ve(); /* Make cursor visible */
 	ioctl(0, TCSETA, &(gl_env.line_backup)); /* restore terminal configs */	
 	dup2(gl_env.stdio_backup, 1);
 }
@@ -72,19 +70,13 @@ void init_caps()
 	}
 	tgetent(bp, term);
 
-	// gl_env.left = term_get_cap(LEFT);
-	// gl_env.right = term_get_cap(RIGHT);
-	// gl_env.up = term_get_cap(UP);
-	// gl_env.down = term_get_cap(DOWN);
-	// gl_env.esc = term_get_cap("\E");
-	// gl_env.underline = term_get_cap(UNDERLINE);
-	// gl_env.under_end = term_get_cap(UNDER_END);
-	// gl_env.standout = term_get_cap(STANDOUT);
-	// gl_env.stand_end = term_get_cap(STAND_END);
 	gl_env.move = term_get_cap(MOVE);
 	gl_env.clear = term_get_cap(CLEAR);
-	// gl_env.cursoroff = term_get_cap(CURSOROFF);
-	// gl_env.cursoron = term_get_cap(CURSORON);
+	gl_env.delete_char = term_get_cap(DEL_CHAR);
+	gl_env.move_left = term_get_cap(MOVE_LEFT);
+	gl_env.move_right = term_get_cap(MOVE_RIGHT);
+	gl_env.move_down = term_get_cap(MOVE_DOWN);
+	gl_env.move_start = term_get_cap(MOVE_START);
 }
 
 /* pre : term caps have been configured
@@ -93,6 +85,46 @@ void init_caps()
 void term_clear()
 {
 	tputs(gl_env.clear, 1, my_termprint);
+}
+
+/* pre : term caps have been configured
+* post : deletes a character at the cursor
+*/
+void term_delete_char()
+{
+	tputs(gl_env.delete_char, 1, my_termprint);
+}
+
+/* pre : term caps have been configured
+* post : moves cursor to the left
+*/
+void term_move_left()
+{
+	tputs(gl_env.move_left, 1, my_termprint);
+}
+
+/* pre : term caps have been configured
+* post : moves cursor to the right
+*/
+void term_move_right()
+{
+	tputs(gl_env.move_right, 1, my_termprint);
+}
+
+/* pre : term caps have been configured
+* post : moves cursor down
+*/
+void term_move_down()
+{
+	tputs(gl_env.move_down, 1, my_termprint);
+}
+
+/* pre : term caps have been configured
+* post : moves cursor to the start of the current line
+*/
+void term_move_start()
+{
+	tputs(gl_env.move_start, 1, my_termprint);
 }
 
 /* pre : term caps have been configured
@@ -161,55 +193,47 @@ void term_move(int x, int y)
 // }
 
 /* pre : terminal has been restored
-* post : Prints to STDOUT the list of all highlighted items with whitespaces inbetween and exits
+* post : Prints a goodbye message and exits
 */
-// void getout()
-// {
-// 	unsigned int i;
+void getout()
+{
+	my_str("Thank you for using my shell!\n");
+	exit(0);
+}
 
-// 	for (i = 0; i < gl_env.nbelems; i++)
-// 	{
-// 		if (gl_env.elements[i].mode) /* If element was highlighted */
-// 		{
-// 			my_str(gl_env.elements[i].elem);
-// 			break;
-// 		}
-// 	}
-
-// 	for (i++; i < gl_env.nbelems; i++)
-// 	{
-// 		if (gl_env.elements[i].mode) /* If element was highlighted */
-// 		{
-// 			my_char(' ');
-// 			my_str(gl_env.elements[i].elem);
-// 		}
-// 	}
-// 	exit(0);
-// }
-
-/* pre : number of elements, vector of strings representing elements
+/* pre : nothing
 * post : Initializes gl_env strings
 */
 void setup_env()
 {
 	unsigned int i;
 
-	// gl_env.nbelems = n; /* Set number of elements */
-	gl_env.pos = 0; /* Set current element position */
-	gl_env.flag = 0; /* Unset flag */
+	// gl_env.nbelems = n; /* Set number of commands in history */
+	gl_env.pos = 0;
 
-	gl_env.curr_dir = (char *) xmalloc(BUF_SZ * sizeof(char)); /* allocate current directory buffer */
-	gl_env.curr_dir_len = 0; /* initialize current directory length */
-	
-	gl_env.elements = (t_elem *) xmalloc(n * sizeof(*(gl_env.elements)));
+	set_curr_dir();
 
-	/* Fill array with elements */
-	for (i = 0; i < n; i++)
-	{
-		gl_env.elements[i].elem = elems[i];
-		gl_env.elements[i].size = my_strlen(gl_env.elements[i].elem);
-		gl_env.elements[i].x = 0;
-		gl_env.elements[i].y = 0;
-		gl_env.elements[i].mode = 0;
-	}
+	gl_env.cmd_buffer.elem = (char *) xmalloc(BUF_SZ * sizeof(*(gl_env.cmd_buffer.elem))); /* allocate for command buffer */
+	gl_env.cmd_buffer.size = 0; /* init command length */
+	gl_env.cmd_buffer.elem[0] = '\0';
+	gl_env.curr_cmd = &gl_env.cmd_buffer;
+
+	/* Load history, if it exists NOT DONE*/
+	// gl_env.elements = (t_elem *) xmalloc(n * sizeof(*(gl_env.elements)));
+
+	// /* Fill array with elements */
+	// for (i = 0; i < n; i++)
+	// {
+	// 	gl_env.elements[i].elem = elems[i];
+	// 	gl_env.elements[i].size = my_strlen(gl_env.elements[i].elem);
+	// }
+}
+
+/* pre : nothing
+* post : sets the current directory in gl_env
+*/
+void set_curr_dir()
+{
+	gl_env.curr_dir.elem = getcwd(NULL, 0); /* get current directory */
+	gl_env.curr_dir.size = my_strlen(gl_env.curr_dir.elem); /* set current directory length */
 }

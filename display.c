@@ -17,8 +17,7 @@ char get_win_size()
 }
 
 /* pre : nothing
-* post : shows the elements on the terminal
-*        prints a message if pompt and command cannot fit in the terminal
+* post : shows the shell prompt and the last command
 */
 void show_prompt()
 {
@@ -26,33 +25,11 @@ void show_prompt()
 
 	get_win_size();
 	gl_env.flag = 0;
+	gl_env.cursor_col = ((gl_env.curr_dir.size + 4) - 1) % gl_env.win.ws_col;
 	term_clear();
 
-	/* Print each element */
-	for(i = x = y = max = 0; i < gl_env.nbelems; i++, y++)
-	{
-		if (y >= gl_env.win.ws_row) /* if all rows filled, move to next column */
-		{
-			y = 0;
-			x += max + 3;
-			max = 0;
-		}
-		if (max < gl_env.elements[i].size) /* if found new max length element, set new max length */
-			max = gl_env.elements[i].size;
-		if (max + x > gl_env.win.ws_col) /* if current element cannot fit in terminal */
-		{
-			term_clear();
-			my_str("Please enlarge the window");
-			gl_env.flag = 1;
-			return;
-		}
-
-		/* store coordinates and print element */
-		gl_env.elements[i].x = x;
-		gl_env.elements[i].y = y;
-		refreshout(i);
-	}
-	refreshin(); /* underline previously selected element */
+	print_prompt();
+	print_cmd();
 }
 
 /* pre : nothing
@@ -110,35 +87,46 @@ void show_prompt()
 // }
 
 /* pre : nothing
-* post : Moves to the item on same row, but previous column
-*        Does not wrap around
+* post : Moves cursor to the left up to the start of the prompt
 */
-// void moveleft()
-// {
-// 	refreshout(gl_env.pos);
-// 	/* if underline is currently in first column, go to first element */
-// 	if (gl_env.elements[gl_env.pos].x == 0)
-// 		term_move_to_item(0);
-// 	else
-// 		term_move_to_item(gl_env.pos - gl_env.win.ws_row);
-// 	refreshin();
-// }
+void moveleft()
+{
+	if (gl_env.pos > 0)
+	{
+		if (gl_env.cursor_col == 0)
+		{
+			gl_env.cursor_col = gl_env.win.ws_col - 1;
+		}
+		else
+		{
+			gl_env.cursor_col--;
+		}
+		term_move_left(); /* move cursor left */
+		gl_env.pos--;
+	}
+}
 
 /* pre : nothing
-* post : Moves to the item on the same row, but next column
-*        Does not wrap around
+* post : Moves cursor to the right up to the end of the command
 */
-// void moveright()
-// {
-// 	unsigned int next_pos = gl_env.pos + gl_env.win.ws_row;
-// 	refreshout(gl_env.pos);
-// 	/* if underline is currently in last column or there is no element directly to the right, go to last element */
-// 	if ((gl_env.elements[gl_env.pos].x == gl_env.elements[gl_env.nbelems - 1].x) || (next_pos > (gl_env.nbelems - 1)))
-// 		term_move_to_item(gl_env.nbelems - 1);
-// 	else
-// 		term_move_to_item(next_pos);
-// 	refreshin();
-// }
+void moveright()
+{
+	if (gl_env.pos < gl_env.curr_cmd->size)
+	{
+		if (gl_env.cursor_col == (gl_env.win.ws_col - 1))
+		{
+			term_move_down();
+			term_move_start();
+			gl_env.cursor_col = 0;
+		}
+		else
+		{
+			term_move_right(); /* move cursor right */
+			gl_env.cursor_col++;
+		}
+		gl_env.pos++;
+	}
+}
 
 /* pre : nothing
 * post : Highlights the currently selected item, if not highlighted
@@ -159,3 +147,20 @@ void show_prompt()
 // 		movedown();
 // 	}
 // }
+
+/* pre : nothing
+* post : prints shell prompt with current directory
+*/
+void print_prompt()
+{
+	my_str(gl_env.curr_dir.elem);
+	my_str("$> ");
+}
+
+/* pre : nothing
+* post : prints the last command
+*/
+void print_cmd()
+{
+	my_str(gl_env.curr_cmd->elem);
+}
