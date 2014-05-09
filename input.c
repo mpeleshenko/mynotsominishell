@@ -49,12 +49,10 @@ void check_character(char *c)
 				else if (c[i] == CTRL_K) /* Handle CTRL-K */
 				{
 					/* cut from cursor position to end of line */
-					refreshout();
 				}
 				else if (c[i] == CTRL_Y) /* Handle CTRL-Y */
 				{
 					/* paste what was cut */
-					refreshin();
 				}
 				else if (c[i] == CTRL_A) /* Handle CTRL-A */
 				{
