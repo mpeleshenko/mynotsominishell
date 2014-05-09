@@ -144,7 +144,8 @@ void check_command()
 	vect = NULL;
 
 
-	/* save command in history NOT DONE*/
+	/* save command in history */
+	save_command();
 
 	/* reset curr_cmd pointer */
 	gl_env.curr_cmd = &(gl_env.cmd_buffer);

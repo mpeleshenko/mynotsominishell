@@ -206,6 +206,7 @@ void term_move(int x, int y)
 */
 void getout()
 {
+	save_history(); /* save command history to file */
 	my_str("Thank you for using my shell!\n");
 	exit(0);
 }
@@ -227,20 +228,27 @@ void setup_env()
 
 	set_curr_dir();
 
+	/* init command buffer */
 	gl_env.cmd_buffer.elem = (char *) xmalloc(BUF_SZ * sizeof(*(gl_env.cmd_buffer.elem))); /* allocate for command buffer */
 	gl_env.cmd_buffer.size = 0; /* init command length */
 	gl_env.cmd_buffer.elem[0] = '\0';
 	gl_env.curr_cmd = &gl_env.cmd_buffer;
 
+	/* init copy buffer */
 	gl_env.cpy_buffer.elem = (char *) xmalloc(BUF_SZ * sizeof(*(gl_env.cpy_buffer.elem))); /* allocate for copy buffer */
-	gl_env.cmd_buffer.size = 0; /* init copy command length */
-	gl_env.cmd_buffer.elem[0] = '\0';
+	gl_env.cpy_buffer.size = 0; /* init copy command length */
+	gl_env.cpy_buffer.elem[0] = '\0';
+
+	/* init history buffer */
+	gl_env.hst_buffer.elem = (char *) xmalloc(BUF_SZ * sizeof(*(gl_env.hst_buffer.elem))); /* allocate for history buffer */
+	gl_env.hst_buffer.size = 0; /* init copy command length */
+	gl_env.hst_buffer.elem[0] = '\0';
 
 	/* Load history, if it exists */
 	load_history();
 	if (gl_env.nbelems > 0)
 	{
-		gl_env.elem_first = gl_env.nbelems - 1;
+		gl_env.elem_first = gl_env.nbelems - 1; /* set most recent command index */
 	}
 }
 

@@ -21,8 +21,8 @@
 #define FALSE 0
 #endif
 
-#define BUF_SZ 256
-#define HISTORY_LIMIT 100
+#define BUF_SZ 2097152 /* same buffer size as in current BASH */
+#define HISTORY_LIMIT 100 /* size of command history */
 
 #define READTIME 1
 /* used to return from read after 1/10th of second passed from the first byte read */
@@ -84,6 +84,7 @@ typedef struct s_env
 	unsigned int cursor_col; /* column of cursor */
 	t_elem curr_dir; /* current directory path */
 	t_elem cmd_buffer; /* buffer for current command */
+	t_elem hst_buffer; /* buffer for command in history for editing */
 	t_elem cpy_buffer; /* buffer for copied command */
 	t_elem *curr_cmd; /* pointer to command being displayed */
 

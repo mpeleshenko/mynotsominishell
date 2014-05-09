@@ -8,7 +8,7 @@ void load_history()
 	unsigned int i, j;
 	int fd;
 	int n;
-	char buffer[BUF_SZ];
+	static char buffer[BUF_SZ];
 
 	if ((fd = open(".history", O_RDONLY)) > 0) /* if file could be opened */
 	{
@@ -72,9 +72,8 @@ void save_history()
 	unsigned int elems = gl_env.nbelems;
 	int fd;
 	int n;
-	char buffer[BUF_SZ];
 
-	if ((fd = open(".history", O_WRONLY)) > 0) /* if file could be opened */
+	if ((fd = open(".history", O_WRONLY | O_TRUNC)) > 0) /* if file could be opened */
 	{
 		for(i = gl_env.elem_last; elems > 0; elems--, i = ++i % gl_env.nbelems)
 		{
@@ -100,23 +99,25 @@ void save_history()
 
 
 /* pre : nothing
-* post : loads commands from the .history file, if it exists, and sets nbelems in gl_env
+* post : saves current command to history
 */
-// void save_command()
-// {
-// 	unsigned int i;
-// 	int fd;
-// 	int n;
-// 	char buffer[BUF_SZ];
+void save_command()
+{
+	gl_env.elem_first = ++gl_env.elem_first % HISTORY_LIMIT; /* increment most recent command index */
+	if (gl_env.nbelems == HISTORY_LIMIT) /* if history at capacity */
+	{
+		gl_env.elem_last = ++gl_env.elem_last % HISTORY_LIMIT; /* increment last command pointer */
 
-// 	if ((fd = open(".history", O_WRONLY)) > 0) /* if file could be opened */
-// 	{
-// 		for(i = 0; i < HISTORY_LIMIT && ((n = read(fd, buffer, BUF_SZ - 1)) > 0); i++)
-// 		{
-// 			buffer[n] = '\0';
-// 			gl_env.elements[i].elem = my_strdup(buffer);
-// 			gl_env.elements[i].size = (n - 1);
-// 			gl_env.nbelems++;
-// 		}
-// 	}
-// }
+		/* replace most recent command with current command */
+		free(gl_env.elements[gl_env.elem_first].elem);
+		gl_env.elements[gl_env.elem_first].elem = my_strdup(gl_env.curr_cmd->elem);
+		gl_env.elements[gl_env.elem_first].size = gl_env.curr_cmd->size;
+	}
+	else /* if history not at capacity */
+	{
+		/* replace most recent command with current command */
+		gl_env.elements[gl_env.elem_first].elem = my_strdup(gl_env.curr_cmd->elem);
+		gl_env.elements[gl_env.elem_first].size = gl_env.curr_cmd->size;
+		gl_env.nbelems++;
+	}
+}

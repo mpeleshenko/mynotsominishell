@@ -75,7 +75,11 @@ void moveup()
 	{
 		refreshout();
 		gl_env.curr_elem = gl_env.elem_first;
-		gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
+
+		/* copy command from history int hst_buffer */
+		my_strcpy(gl_env.hst_buffer.elem, gl_env.elements[gl_env.curr_elem].elem);
+		gl_env.hst_buffer.size = gl_env.elements[gl_env.curr_elem].size;
+		gl_env.curr_cmd = &(gl_env.hst_buffer);
 		refreshin();
 	}
 	else
@@ -91,7 +95,9 @@ void moveup()
 				gl_env.curr_elem--;
 			}
 			refreshout();
-			gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
+			/* copy command from history int hst_buffer */
+			my_strcpy(gl_env.hst_buffer.elem, gl_env.elements[gl_env.curr_elem].elem);
+			gl_env.hst_buffer.size = gl_env.elements[gl_env.curr_elem].size;
 			refreshin();
 		}
 	}
@@ -105,8 +111,9 @@ void movedown()
 	if (gl_env.curr_cmd != &gl_env.cmd_buffer) /* if not at current command */
 	{
 		refreshout();
-		if (gl_env.curr_elem == gl_env.elem_first)
+		if (gl_env.curr_elem == gl_env.elem_first) /* if at most recent command in history */
 		{
+			/* switch to command buffer */
 			gl_env.curr_cmd = &(gl_env.cmd_buffer);
 		}
 		else
@@ -119,7 +126,11 @@ void movedown()
 			{
 				gl_env.curr_elem++;
 			}
-			gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
+			/* copy command from history int hst_buffer */
+			my_strcpy(gl_env.hst_buffer.elem, gl_env.elements[gl_env.curr_elem].elem);
+			gl_env.hst_buffer.size = gl_env.elements[gl_env.curr_elem].size;
+			// gl_env.curr_cmd = &(gl_env.hst_buffer);
+			// gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
 		}
 		refreshin();
 	}

@@ -6,11 +6,11 @@
 - Ctrl-L
 - normal input
 - history loading
+- history saving
 - up/down arrows
 - Backspace
 - Inserting characters
 
 #####What doesn't work:
-- history saving
 - Ctrl-K
 - Ctrl-Y
