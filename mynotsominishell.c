@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
 	setup_env(); /* init gl_env */
 	signal(SIGWINCH, show_prompt);
 
-	// show_prompt();
 	show_prompt();
 	while(1)
 	{

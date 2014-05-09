@@ -73,6 +73,7 @@ void init_caps()
 	gl_env.move = term_get_cap(MOVE);
 	gl_env.clear = term_get_cap(CLEAR);
 	gl_env.delete_char = term_get_cap(DEL_CHAR);
+	// gl_env.insert_char = term_get_cap(INS_CHAR);
 	gl_env.move_left = term_get_cap(MOVE_LEFT);
 	gl_env.move_right = term_get_cap(MOVE_RIGHT);
 	gl_env.move_down = term_get_cap(MOVE_DOWN);
@@ -94,6 +95,14 @@ void term_delete_char()
 {
 	tputs(gl_env.delete_char, 1, my_termprint);
 }
+
+/* pre : term caps have been configured
+* post : inserts a character at the cursor
+*/
+// void term_insert_char()
+// {
+// 	tputs(gl_env.insert_char, 1, my_termprint);
+// }
 
 /* pre : term caps have been configured
 * post : moves cursor to the left
@@ -207,8 +216,13 @@ void getout()
 void setup_env()
 {
 	unsigned int i;
+	int fd;
 
-	// gl_env.nbelems = n; /* Set number of commands in history */
+	gl_env.nbelems = 0; /* Set number of commands in history */
+	gl_env.elem_last = 0;
+	gl_env.elem_first = 0;
+	gl_env.elements = (t_elem *) xmalloc(HISTORY_LIMIT * sizeof(*(gl_env.elements)));
+
 	gl_env.pos = 0;
 
 	set_curr_dir();
@@ -218,15 +232,12 @@ void setup_env()
 	gl_env.cmd_buffer.elem[0] = '\0';
 	gl_env.curr_cmd = &gl_env.cmd_buffer;
 
-	/* Load history, if it exists NOT DONE*/
-	// gl_env.elements = (t_elem *) xmalloc(n * sizeof(*(gl_env.elements)));
-
-	// /* Fill array with elements */
-	// for (i = 0; i < n; i++)
-	// {
-	// 	gl_env.elements[i].elem = elems[i];
-	// 	gl_env.elements[i].size = my_strlen(gl_env.elements[i].elem);
-	// }
+	/* Load history, if it exists */
+	load_history();
+	if (gl_env.nbelems > 0)
+	{
+		gl_env.elem_first = gl_env.nbelems - 1;
+	}
 }
 
 /* pre : nothing

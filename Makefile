@@ -6,6 +6,7 @@ NAME = mynotsominishell
 SRC = terminal.c \
 	display.c \
 	input.c \
+	history.c \
 	mynotsominishell.c
 OBJ = $(SRC:.c=.o)
 

@@ -21,11 +21,11 @@ void check_character(char *c)
 		}
 		else if (!my_strcmp(c, KU)) /* Handle UP arrow */
 		{
-			// moveup();
+			moveup();
 		}
 		else if (!my_strcmp(c, KD)) /* Handle DOWN arrow */
 		{
-			// movedown();
+			movedown();
 		}
 		else if (!my_strcmp(c, KL)) /* Handle LEFT arrow */
 		{
@@ -42,32 +42,29 @@ void check_character(char *c)
 				if (c[i] == BACKSPACE) /* Handle BACKSPACE */
 				{
 					/* NOT DONE */
-					remove_character(gl_env.cmd_buffer.size - 1);
+					remove_character(gl_env.curr_cmd->size - 1);
+					moveleft();
 					term_delete_char();
 				}
 				else if (c[i] == CTRL_K) /* Handle CTRL-K */
 				{
 					/* cut from cursor position to end of line */
+					refreshout();
 				}
 				else if (c[i] == CTRL_Y) /* Handle CTRL-Y */
 				{
 					/* paste what was cut */
+					refreshin();
 				}
 				else if (c[i] == CTRL_A) /* Handle CTRL-A */
 				{
 					/* move cursor to first character */
-					for (i = gl_env.pos; i > 0; i--)
-					{
-						moveleft();
-					}
+					movestart();
 				}
 				else if (c[i] == CTRL_E) /* Handle CTRL-E */
 				{
 					/* move cursor to the end */
-					for (i = gl_env.pos; i < gl_env.curr_cmd->size; i++)
-					{
-						moveright();
-					}
+					moveend();
 				}
 				else if (c[i] == CTRL_L) /* Handle CTRL-L */
 				{
@@ -95,7 +92,7 @@ void check_command()
 	pid_t pid;
 	char **vect;
 
-	vect = my_str2vect(gl_env.cmd_buffer.elem);
+	vect = my_str2vect(gl_env.curr_cmd->elem);
 	if(!vect)
 		my_str("It is null\n");
 
@@ -155,6 +152,9 @@ void check_command()
 
 	/* save command in history NOT DONE*/
 
+	/* reset curr_cmd pointer */
+	gl_env.curr_cmd = &(gl_env.cmd_buffer);
+
 	/* clear command buffer */
 	gl_env.cmd_buffer.elem[0] = '\0';
 	gl_env.cmd_buffer.size = 0;
@@ -164,31 +164,31 @@ void check_command()
 }
 
 /* pre : character
-* post : adds a character to the cmd_buffer
+* post : adds a character to the current command
 */
 void add_character(char c)
 {
-	if (gl_env.cmd_buffer.size < BUF_SZ - 1) /* if buffer has room */
+	if (gl_env.curr_cmd->size < BUF_SZ - 1) /* if buffer has room */
 	{
-		gl_env.cmd_buffer.elem[gl_env.cmd_buffer.size] = c;
-		gl_env.cmd_buffer.size++;
-		gl_env.cmd_buffer.elem[gl_env.cmd_buffer.size] = '\0'; /* terminate command string */
+		gl_env.curr_cmd->elem[gl_env.curr_cmd->size] = c;
+		gl_env.curr_cmd->size++;
+		gl_env.curr_cmd->elem[gl_env.curr_cmd->size] = '\0'; /* terminate command string */
 	}
 }
 
-/* pre : index of character in command buffer
+/* pre : index of character in current command
 * post : removes character at given index, starting from 0
 */
 void remove_character(unsigned int index)
 {
-	if (gl_env.cmd_buffer.size > 0 && index < gl_env.cmd_buffer.size) /* if buffer is not empty */
+	if (gl_env.curr_cmd->size > 0 && index < gl_env.curr_cmd->size) /* if buffer is not empty */
 	{
-		if (index != gl_env.cmd_buffer.size - 1) /* remove character at index */
+		if (index != gl_env.curr_cmd->size - 1) /* remove character at index */
 		{
 			/* need to implement this */
 		}
-		gl_env.cmd_buffer.size--;
-		gl_env.cmd_buffer.elem[gl_env.cmd_buffer.size] = '\0'; /* terminate command string */
+		gl_env.curr_cmd->size--;
+		gl_env.curr_cmd->elem[gl_env.curr_cmd->size] = '\0'; /* terminate command string */
 
 	}
 }

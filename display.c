@@ -33,58 +33,89 @@ void show_prompt()
 }
 
 /* pre : nothing
-* post : Reprints the currently selected element as it was with an underline
+* post : prints current command on terminal
 */
-// void refreshin()
-// {
-// 	term_move_to_item(gl_env.pos);
-// 	term_underline(); /* turn on onderline */
-// 	if (gl_env.elements[gl_env.pos].mode)  /* if element was highlighted */
-// 		term_standout();
-// 	my_str(gl_env.elements[gl_env.pos].elem); /* print element */
-// 	term_standend();
-// 	term_underend(); /* turn off underline */
-// }
-
-/* pre : element number
-* post : Reprints the element as it was with the underline removed
-*/
-// void refreshout(int n)
-// {
-// 	term_move_to_item(n);
-// 	if (gl_env.elements[n].mode)  /* if element was highlighted */
-// 		term_standout();
-// 	my_str(gl_env.elements[n].elem); /* print element */
-// 	term_standend();
-// }
+void refreshin()
+{
+	print_cmd();
+	gl_env.cursor_col = ((gl_env.curr_dir.size + 4 + gl_env.curr_cmd->size) - 1) % gl_env.win.ws_col;
+	gl_env.pos = gl_env.curr_cmd->size;
+}
 
 /* pre : nothing
-* post : Moves to the previous item, wraps around if necessary
+* post : clears current command on the terminal
 */
-// void moveup()
-// {
-// 	refreshout(gl_env.pos);
-// 	/* if underline is currently on first element, wrap around */
-// 	if (gl_env.pos == 0)
-// 		term_move_to_item(gl_env.nbelems - 1);
-// 	else
-// 		term_move_to_item(gl_env.pos - 1);
-// 	refreshin();
-// }
+void refreshout()
+{
+	unsigned int i;
+	moveend(); /* move to last character of command */
+	for (i = 0; i < gl_env.curr_cmd->size; i++)
+	{
+		moveleft();
+		term_delete_char();
+	}
+	gl_env.cursor_col = ((gl_env.curr_dir.size + 4) - 1) % gl_env.win.ws_col;
+	gl_env.pos = 0;
+}
 
 /* pre : nothing
-* post : Moves to the next item, wraps around if necessary
+* post : Moves to the previous command in history, if it exists
 */
-// void movedown()
-// {
-// 	refreshout(gl_env.pos);
-// 	/* if underline is currently on last element, wrap around */
-// 	if (gl_env.pos == gl_env.nbelems - 1)
-// 		term_move_to_item(0);
-// 	else
-// 		term_move_to_item(gl_env.pos + 1);
-// 	refreshin();
-// }
+void moveup()
+{
+	if (gl_env.curr_cmd == &gl_env.cmd_buffer && gl_env.nbelems > 0) /* if history is not empty */
+	{
+		refreshout();
+		gl_env.curr_elem = gl_env.elem_first;
+		gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
+		refreshin();
+	}
+	else
+	{
+		if (gl_env.curr_elem != gl_env.elem_last) /* if not reached end of history */
+		{
+			if (gl_env.curr_elem == 0)
+			{
+				gl_env.curr_elem = gl_env.nbelems - 1;
+			}
+			else
+			{
+				gl_env.curr_elem--;
+			}
+			refreshout();
+			gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
+			refreshin();
+		}
+	}
+}
+
+/* pre : nothing
+* post : Moves to more recent item in history up to the current command
+*/
+void movedown()
+{
+	if (gl_env.curr_cmd != &gl_env.cmd_buffer) /* if not at current command */
+	{
+		refreshout();
+		if (gl_env.curr_elem == gl_env.elem_first)
+		{
+			gl_env.curr_cmd = &(gl_env.cmd_buffer);
+		}
+		else
+		{
+			if (gl_env.curr_elem == gl_env.nbelems - 1) /* if at end of array */
+			{
+				gl_env.curr_elem = 0;
+			}
+			else
+			{
+				gl_env.curr_elem++;
+			}
+			gl_env.curr_cmd = &(gl_env.elements[gl_env.curr_elem]);
+		}
+		refreshin();
+	}
+}
 
 /* pre : nothing
 * post : Moves cursor to the left up to the start of the prompt
@@ -125,6 +156,30 @@ void moveright()
 			gl_env.cursor_col++;
 		}
 		gl_env.pos++;
+	}
+}
+
+/* pre : nothing
+* post : Moves cursor to the first character of the command
+*/
+void movestart()
+{
+	unsigned int i;
+	for (i = gl_env.pos; i > 0; i--)
+	{
+		moveleft();
+	}
+}
+
+/* pre : nothing
+* post : Moves cursor to the last character of the command
+*/
+void moveend()
+{
+	unsigned int i;
+	for (i = gl_env.pos; i < gl_env.curr_cmd->size; i++)
+	{
+		moveright();
 	}
 }
 
