@@ -35,6 +35,7 @@ void init_terminal()
 void restore_terminal()
 {
 	term_clear();
+	term_ve(); /* make cursor visible */
 	ioctl(0, TCSETA, &(gl_env.line_backup)); /* restore terminal configs */	
 	dup2(gl_env.stdio_backup, 1);
 }

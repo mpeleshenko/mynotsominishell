@@ -73,7 +73,7 @@ void save_history()
 	int fd;
 	int n;
 
-	if ((fd = open(".history", O_WRONLY | O_TRUNC)) > 0) /* open file for writing and truncate it */
+	if ((fd = open(".history", O_WRONLY | O_CREAT | O_TRUNC, 0644)) > 0) /* open file for writing, create if necessary, and truncate it */
 	{
 		for(i = gl_env.elem_last; elems > 0; elems--, i = ++i % gl_env.nbelems)
 		{
@@ -103,9 +103,12 @@ void save_history()
 */
 void save_command()
 {
-	if (my_strcmp(gl_env.curr_cmd->elem, gl_env.elements[gl_env.elem_first].elem)) /* if not most recent command was selected */
+	if (!gl_env.nbelems || my_strcmp(gl_env.curr_cmd->elem, gl_env.elements[gl_env.elem_first].elem)) /* if history empty or not most recent command was selected */
 	{
-		gl_env.elem_first = ++gl_env.elem_first % HISTORY_LIMIT; /* increment most recent command index */
+		if (gl_env.nbelems)
+		{
+			gl_env.elem_first = ++gl_env.elem_first % HISTORY_LIMIT; /* increment most recent command index */
+		}
 		if (gl_env.nbelems == HISTORY_LIMIT) /* if history at capacity */
 		{
 			gl_env.elem_last = ++gl_env.elem_last % HISTORY_LIMIT; /* increment last command pointer */
