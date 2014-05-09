@@ -13,6 +13,7 @@
 #include <termcap.h>
 #include <sys/wait.h> /* for wait */
 #include <errno.h> /* for errno */
+#include <string.h> /* for memcpy */
 
 #ifndef TRUE
 #define TRUE 1
@@ -21,7 +22,7 @@
 #define FALSE 0
 #endif
 
-#define BUF_SZ 2097152 /* same buffer size as in current BASH */
+#define BUF_SZ 2097152 /* same buffer size as in BASH */
 #define HISTORY_LIMIT 100 /* size of command history */
 
 #define READTIME 1
@@ -48,35 +49,32 @@
 #define KR "\E[C"
 #define KL "\E[D"
 #define CLEAR "cl"
-#define MOVE "cm"
 #define MOVE_LEFT "le"
 #define MOVE_RIGHT "nd"
 #define MOVE_DOWN "do"
 #define MOVE_START "cr" /* move to start of line */
 #define DEL_CHAR "dc"
-// #define INS_CHAR "im"
-#define VECAP "\E[?25h" /* actual string for VE in case tgetstr doesn't find it */
-#define VICAP "\E[?25l" /* same as above but for VI */
+#define CURSOROFF "vi"
+#define CURSORON "ve"
 
 typedef struct s_elem
 {
 	char *elem;
-	int	size;
+	unsigned int size;
 }	t_elem;
 
 typedef struct s_env
 {
-	char *move;
-	char *clear;
-	char *delete_char;
-	// char *insert_char;
 	char *move_left;
 	char *move_right;
 	char *move_down;
 	char *move_start;
+	char *clear;
+	char *delete_char;
+	char *cursoroff;
+	char *cursoron;
 	struct winsize win;
 	struct termio line_backup;
-	int	flag;
 	int	stdio_backup;
 	int history_fd;
 	
@@ -104,32 +102,38 @@ char *term_get_cap(char*);
 void init_caps();
 int	my_termprint(int);
 void term_clear();
+void term_vi();
+void term_ve();
+
 void check_character(char *c);
 void check_command();
 char add_character(char, unsigned int);
 void remove_character(unsigned int);
+
 char get_win_size();
 void show_prompt();
 void refreshin();
 void refreshout();
+
 void moveup();
 void movedown();
 void moveleft();
 void moveright();
 void movestart();
 void moveend();
+
 void addchar(char c);
 void deletechar();
-void cutcmd();
 void getout();
 
 void setup_env();
 void set_curr_dir();
+
+void cut_cmd();
+void paste_cmd();
 void print_prompt();
 void print_cmd(unsigned int);
 
-void term_move(int, int);
-void term_move_to_item(int);
 void term_move_left();
 void term_move_right();
 

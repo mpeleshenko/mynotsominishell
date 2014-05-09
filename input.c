@@ -6,75 +6,77 @@
 void check_character(char *c)
 {
 	unsigned int i;
+
 	if (!my_strcmp(c, ESC)) /* Handle ESC */
 	{
 		restore_terminal();
 		getout();
 	}
-	if (!gl_env.flag) /* if terminal does not need resizing */
+	
+	term_vi(); /* make cursor invisible */
+	if (!my_strcmp(c, ENTER)) /* Handle ENTER */
 	{
-		if (!my_strcmp(c, ENTER)) /* Handle ENTER */
+		moveend();
+		my_str(c);
+		check_command();
+		print_prompt();
+	}
+	else if (!my_strcmp(c, KU)) /* Handle UP arrow */
+	{
+		moveup();
+	}
+	else if (!my_strcmp(c, KD)) /* Handle DOWN arrow */
+	{
+		movedown();
+	}
+	else if (!my_strcmp(c, KL)) /* Handle LEFT arrow */
+	{
+		moveleft();
+	}
+	else if (!my_strcmp(c, KR)) /* Handle RIGHT arrow */
+	{
+		moveright();
+	}
+	else /* Handle single character input */
+	{
+		for(i = 0; i < READMIN && c[i]; i++) /* iterate through buffer to get all possible characters */
 		{
-			moveend();
-			my_str(c);
-			check_command();
-			print_prompt();
-		}
-		else if (!my_strcmp(c, KU)) /* Handle UP arrow */
-		{
-			moveup();
-		}
-		else if (!my_strcmp(c, KD)) /* Handle DOWN arrow */
-		{
-			movedown();
-		}
-		else if (!my_strcmp(c, KL)) /* Handle LEFT arrow */
-		{
-			moveleft();
-		}
-		else if (!my_strcmp(c, KR)) /* Handle RIGHT arrow */
-		{
-			moveright();
-		}
-		else /* Handle single character input */
-		{
-			for(i = 0; i < READMIN && c[i]; i++) /* iterate through buffer to get all possible characters */
+			if (c[i] == BACKSPACE) /* Handle BACKSPACE */
 			{
-				if (c[i] == BACKSPACE) /* Handle BACKSPACE */
-				{
-					/* NOT DONE */
-					deletechar();
-				}
-				else if (c[i] == CTRL_K) /* Handle CTRL-K */
-				{
-					/* cut from cursor position to end of line */
-				}
-				else if (c[i] == CTRL_Y) /* Handle CTRL-Y */
-				{
-					/* paste what was cut */
-				}
-				else if (c[i] == CTRL_A) /* Handle CTRL-A */
-				{
-					/* move cursor to first character */
-					movestart();
-				}
-				else if (c[i] == CTRL_E) /* Handle CTRL-E */
-				{
-					/* move cursor to the end */
-					moveend();
-				}
-				else if (c[i] == CTRL_L) /* Handle CTRL-L */
-				{
-					/* clear screen and reshow line at top of terminal */
-					show_prompt();
-				}
-				else if (c[i] >= ' ' && c[i] <= '~') /* Handle character input */
-				{
-					addchar(c[i]);
-				}
+				deletechar();
+			}
+			else if (c[i] == CTRL_K) /* Handle CTRL-K */
+			{
+				/* cut from cursor position to end of line */
+				cut_cmd();
+			}
+			else if (c[i] == CTRL_Y) /* Handle CTRL-Y */
+			{
+				/* paste what was cut */
+				paste_cmd();
+			}
+			else if (c[i] == CTRL_A) /* Handle CTRL-A */
+			{
+				/* move cursor to first character */
+				movestart();
+			}
+			else if (c[i] == CTRL_E) /* Handle CTRL-E */
+			{
+				/* move cursor to the end */
+				moveend();
+			}
+			else if (c[i] == CTRL_L) /* Handle CTRL-L */
+			{
+				/* clear screen and reshow line at top of terminal */
+				show_prompt();
+			}
+			else if (c[i] >= ' ' && c[i] <= '~') /* Handle character input */
+			{
+				addchar(c[i]);
 			}
 		}
 	}
+	term_ve(); /* make cursor visible */
 }
 
 /* pre : nothing
@@ -185,7 +187,7 @@ char add_character(char c, unsigned int index)
 void remove_character(unsigned int index)
 {
 	unsigned int i;
-	if (gl_env.curr_cmd->size > 0 && index <= gl_env.curr_cmd->size) /* if buffer is not empty */
+	if (gl_env.curr_cmd->size > 0 && index < gl_env.curr_cmd->size) /* if buffer is not empty */
 	{
 		/* remove character at index and fill gap with next characters */
 		for (i = index + 1; i <= gl_env.curr_cmd->size; i++)

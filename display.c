@@ -25,7 +25,6 @@ void show_prompt()
 	unsigned int saved_pos;
 
 	get_win_size();
-	gl_env.flag = 0;
 	term_clear();
 
 	print_prompt();
@@ -46,8 +45,6 @@ void show_prompt()
 void refreshin()
 {
 	print_cmd(gl_env.pos);
-	// gl_env.cursor_col = ((gl_env.curr_dir.size + 4 + gl_env.curr_cmd->size) - 1) % gl_env.win.ws_col;
-	// gl_env.pos = gl_env.curr_cmd->size;
 }
 
 /* pre : nothing
@@ -82,7 +79,7 @@ void moveup()
 		gl_env.curr_cmd = &(gl_env.hst_buffer);
 		refreshin();
 	}
-	else
+	else /* currently in history */
 	{
 		if (gl_env.curr_elem != gl_env.elem_last) /* if not reached end of history */
 		{
@@ -184,6 +181,7 @@ void moveright()
 void movestart()
 {
 	unsigned int i;
+
 	for (i = gl_env.pos; i > 0; i--)
 	{
 		moveleft();
@@ -196,6 +194,7 @@ void movestart()
 void moveend()
 {
 	unsigned int i;
+
 	for (i = gl_env.pos; i < gl_env.curr_cmd->size; i++)
 	{
 		moveright();
@@ -224,7 +223,8 @@ void addchar(char c)
 
 		saved_pos = gl_env.pos;
 		print_cmd(gl_env.pos);
-		for (i = gl_env.pos - saved_pos; i > 0; i--)
+
+		for (i = gl_env.pos - saved_pos; i > 0; i--) /* move cursor back to old position */
 		{
 			moveleft();
 		}
@@ -247,32 +247,58 @@ void deletechar()
 	print_cmd(gl_env.pos);
 	term_delete_char();
 
-	for (i = gl_env.pos - saved_pos; i > 0; i--)
+	for (i = gl_env.pos - saved_pos; i > 0; i--) /* move cursor back to old position */
 	{
 		moveleft();
 	}
-
 }
 
 /* pre : nothing
-* post : Highlights the currently selected item, if not highlighted
-*        and moves to the next item, wrapping around if necessary
-*        If the item is already highlighted, just removes the highlighting
+* post : copies characters from cursor into copy buffer
+*        and deletes those characters from the current command buffer and terminal
 */
-// void doselect()
-// {
-// 	if (gl_env.elements[gl_env.pos].mode) /* if selected element is already highlighted */
-// 	{
-// 		gl_env.elements[gl_env.pos].mode = 0;
-// 		refreshin();
-// 	}
-// 	else
-// 	{
-// 		gl_env.elements[gl_env.pos].mode = 1;
-// 		refreshin();
-// 		movedown();
-// 	}
-// }
+void cut_cmd()
+{
+	unsigned int i, j;
+
+	if (gl_env.pos != gl_env.curr_cmd->size)
+	{
+		/* copy characters from cursor into copy buffer */
+		gl_env.cpy_buffer.size = gl_env.curr_cmd->size - gl_env.pos;
+		for (i = 0, j = gl_env.pos; i <= gl_env.cpy_buffer.size; i++, j++)
+		{
+			gl_env.cpy_buffer.elem[i] = gl_env.curr_cmd->elem[j];
+		}
+		// memcpy(gl_env.cpy_buffer.elem, &(gl_env.curr_cmd->elem[gl_env.pos]), gl_env.cpy_buffer.size + 1);
+
+		/* update terminal display */
+		moveend();
+		for (i = 0; i < gl_env.cpy_buffer.size; i++)
+		{
+			deletechar();
+		}
+
+		/* update command that was cut from */
+		gl_env.curr_cmd->elem[gl_env.curr_cmd->size] = '\0'; /* termintate command that was cut from */
+	}
+}
+
+/* pre : nothing
+* post : pastes cut command at cursor
+*        and adds those characters to the current command buffer
+*/
+void paste_cmd()
+{
+	unsigned int i;
+
+	if (gl_env.cpy_buffer.size) /* if copy buffer is not empty */
+	{
+		for (i = 0; i < gl_env.cpy_buffer.size; i++)
+		{
+			addchar(gl_env.cpy_buffer.elem[i]);
+		}
+	}
+}
 
 /* pre : nothing
 * post : prints shell prompt with current directory

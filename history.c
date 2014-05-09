@@ -14,10 +14,10 @@ void load_history()
 	{
 		for(i = 0; i < HISTORY_LIMIT; i++)
 		{
-			for (j = 0; j < BUF_SZ - 1;)
+			for (j = 0; j < (BUF_SZ - 1);)
 			{
 				n = read(fd, &buffer[j], 1);
-				if (n <= 0)
+				if (n <= 0) /* if reached end of file */
 				{
 					if (j > 0) /* if something was read before */
 					{
@@ -28,27 +28,27 @@ void load_history()
 				}
 				else
 				{
-					j++;
-					if (buffer[j - 1] == '\r') /* if found carriage return */
+					if (buffer[j] == '\r' || buffer[j] == '\n') /* if found carriage return or newline */
 					{
-						buffer[j - 1] = '\0';
-						break;
-					}
-					if (buffer[j - 1] == '\n') /* if found new line */
-					{
-						if (j == 1) /* handles Windows line endings */
+						if (j != 0) /* if characters were read before, save as command */
 						{
-							j--;
-						}
-						else /* reached end of line */
-						{
-							buffer[j - 1] = '\0';
+							buffer[j] = '\0';
+							j++;
 							break;
 						}
 					}
+					else
+					{
+						j++;
+					}
 				}
 			}
-			if (j && buffer[j - 1] != '\n')
+			if (j && buffer[j - 1] != '\0')
+			{
+				buffer[j] = '\0';
+				j++;
+			}
+			if (j && buffer[j - 1] != '\r' && buffer[j - 1] != '\n')
 			{
 				gl_env.elements[i].elem = my_strdup(buffer);
 				gl_env.elements[i].size = (j - 1);
@@ -73,7 +73,7 @@ void save_history()
 	int fd;
 	int n;
 
-	if ((fd = open(".history", O_WRONLY | O_TRUNC)) > 0) /* if file could be opened */
+	if ((fd = open(".history", O_WRONLY | O_TRUNC)) > 0) /* open file for writing and truncate it */
 	{
 		for(i = gl_env.elem_last; elems > 0; elems--, i = ++i % gl_env.nbelems)
 		{
@@ -99,25 +99,28 @@ void save_history()
 
 
 /* pre : nothing
-* post : saves current command to history
+* post : saves current command to history if it is not the same as the most recent one
 */
 void save_command()
 {
-	gl_env.elem_first = ++gl_env.elem_first % HISTORY_LIMIT; /* increment most recent command index */
-	if (gl_env.nbelems == HISTORY_LIMIT) /* if history at capacity */
+	if (my_strcmp(gl_env.curr_cmd->elem, gl_env.elements[gl_env.elem_first].elem)) /* if not most recent command was selected */
 	{
-		gl_env.elem_last = ++gl_env.elem_last % HISTORY_LIMIT; /* increment last command pointer */
+		gl_env.elem_first = ++gl_env.elem_first % HISTORY_LIMIT; /* increment most recent command index */
+		if (gl_env.nbelems == HISTORY_LIMIT) /* if history at capacity */
+		{
+			gl_env.elem_last = ++gl_env.elem_last % HISTORY_LIMIT; /* increment last command pointer */
 
-		/* replace most recent command with current command */
-		free(gl_env.elements[gl_env.elem_first].elem);
-		gl_env.elements[gl_env.elem_first].elem = my_strdup(gl_env.curr_cmd->elem);
-		gl_env.elements[gl_env.elem_first].size = gl_env.curr_cmd->size;
-	}
-	else /* if history not at capacity */
-	{
-		/* replace most recent command with current command */
-		gl_env.elements[gl_env.elem_first].elem = my_strdup(gl_env.curr_cmd->elem);
-		gl_env.elements[gl_env.elem_first].size = gl_env.curr_cmd->size;
-		gl_env.nbelems++;
+			/* replace most recent command with current command */
+			free(gl_env.elements[gl_env.elem_first].elem);
+			gl_env.elements[gl_env.elem_first].elem = my_strdup(gl_env.curr_cmd->elem);
+			gl_env.elements[gl_env.elem_first].size = gl_env.curr_cmd->size;
+		}
+		else /* if history not at capacity */
+		{
+			/* replace most recent command with current command */
+			gl_env.elements[gl_env.elem_first].elem = my_strdup(gl_env.curr_cmd->elem);
+			gl_env.elements[gl_env.elem_first].size = gl_env.curr_cmd->size;
+			gl_env.nbelems++;
+		}
 	}
 }

@@ -70,14 +70,14 @@ void init_caps()
 	}
 	tgetent(bp, term);
 
-	gl_env.move = term_get_cap(MOVE);
 	gl_env.clear = term_get_cap(CLEAR);
 	gl_env.delete_char = term_get_cap(DEL_CHAR);
-	// gl_env.insert_char = term_get_cap(INS_CHAR);
 	gl_env.move_left = term_get_cap(MOVE_LEFT);
 	gl_env.move_right = term_get_cap(MOVE_RIGHT);
 	gl_env.move_down = term_get_cap(MOVE_DOWN);
 	gl_env.move_start = term_get_cap(MOVE_START);
+	gl_env.cursoroff = term_get_cap(CURSOROFF);
+	gl_env.cursoron = term_get_cap(CURSORON);
 }
 
 /* pre : term caps have been configured
@@ -95,14 +95,6 @@ void term_delete_char()
 {
 	tputs(gl_env.delete_char, 1, my_termprint);
 }
-
-/* pre : term caps have been configured
-* post : inserts a character at the cursor
-*/
-// void term_insert_char()
-// {
-// 	tputs(gl_env.insert_char, 1, my_termprint);
-// }
 
 /* pre : term caps have been configured
 * post : moves cursor to the left
@@ -139,67 +131,18 @@ void term_move_start()
 /* pre : term caps have been configured
 * post : turn cursor off in terminal
 */
-// void term_vi()
-// {
-// 	tputs(gl_env.cursoroff, 1, my_termprint);
-// }
+void term_vi()
+{
+	tputs(gl_env.cursoroff, 1, my_termprint);
+}
 
 /* pre : term caps have been configured
 * post : turn cursor on in terminal
 */
-// void term_ve()
-// {
-// 	tputs(gl_env.cursoron, 1, my_termprint);
-// }
-
-/* pre : term caps have been configured
-* post : turns underline on in terminal
-*/
-// void term_underline()
-// {
-// 	tputs(gl_env.underline, 1, my_termprint);
-// }
-
-/* pre : term caps have been configured
-* post : turns underline off in terminal
-*/
-// void term_underend()
-// {
-// 	tputs(gl_env.under_end, 1, my_termprint);
-// }
-
-/* pre : term caps have been configured
-* post : turns highlight on in terminal
-*/
-// void term_standout()
-// {
-// 	tputs(gl_env.standout, 1, my_termprint);
-// }
-
-/* pre : term caps have been configured
-* post : turns highlight off in terminal
-*/
-// void term_standend()
-// {
-// 	tputs(gl_env.stand_end, 1, my_termprint);
-// }
-
-/* pre : row and column in terminal
-* post : moves cursor to column x and row y in terminal
-*/
-void term_move(int x, int y)
+void term_ve()
 {
-	tputs(tgoto(gl_env.move, x, y), 1, my_termprint);
+	tputs(gl_env.cursoron, 1, my_termprint);
 }
-
-/* pre : element number
-* post : moves cursor to element in terminal
-*/
-// void term_move_to_item(int n)
-// {
-// 	term_move(gl_env.elements[n].x, gl_env.elements[n].y);
-// 	gl_env.pos = n;
-// }
 
 /* pre : terminal has been restored
 * post : Prints a goodbye message and exits
