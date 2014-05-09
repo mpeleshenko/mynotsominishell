@@ -14,6 +14,13 @@
 #include <sys/wait.h> /* for wait */
 #include <errno.h> /* for errno */
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 #define BUF_SZ 256
 #define HISTORY_LIMIT 100
 
@@ -73,10 +80,11 @@ typedef struct s_env
 	int	stdio_backup;
 	int history_fd;
 	
-	int pos; /* position of cursor relative to command's first character */
+	unsigned int pos; /* position of cursor relative to command's first character */
 	unsigned int cursor_col; /* column of cursor */
 	t_elem curr_dir; /* current directory path */
 	t_elem cmd_buffer; /* buffer for current command */
+	t_elem cpy_buffer; /* buffer for copied command */
 	t_elem *curr_cmd; /* pointer to command being displayed */
 
 	t_elem *elements; /* represents command history */
@@ -97,7 +105,7 @@ int	my_termprint(int);
 void term_clear();
 void check_character(char *c);
 void check_command();
-void add_character(char c);
+char add_character(char, unsigned int);
 void remove_character(unsigned int);
 char get_win_size();
 void show_prompt();
@@ -109,12 +117,15 @@ void moveleft();
 void moveright();
 void movestart();
 void moveend();
+void addchar(char c);
+void deletechar();
+void cutcmd();
 void getout();
 
 void setup_env();
 void set_curr_dir();
 void print_prompt();
-void print_cmd();
+void print_cmd(unsigned int);
 
 void term_move(int, int);
 void term_move_to_item(int);

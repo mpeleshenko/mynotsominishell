@@ -232,6 +232,10 @@ void setup_env()
 	gl_env.cmd_buffer.elem[0] = '\0';
 	gl_env.curr_cmd = &gl_env.cmd_buffer;
 
+	gl_env.cpy_buffer.elem = (char *) xmalloc(BUF_SZ * sizeof(*(gl_env.cpy_buffer.elem))); /* allocate for copy buffer */
+	gl_env.cmd_buffer.size = 0; /* init copy command length */
+	gl_env.cmd_buffer.elem[0] = '\0';
+
 	/* Load history, if it exists */
 	load_history();
 	if (gl_env.nbelems > 0)

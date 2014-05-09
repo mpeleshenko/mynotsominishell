@@ -7,10 +7,10 @@
 - normal input
 - history loading
 - up/down arrows
+- Backspace
+- Inserting characters
 
 #####What doesn't work:
-- history
-- Backspace (not working in middle of command)
+- history saving
 - Ctrl-K
 - Ctrl-Y
-- Inserting characters in the middle of the command
