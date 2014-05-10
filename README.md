@@ -6,7 +6,7 @@ A custom built shell that has the following features:
 - on window resize, reprint current prompt and typed command
 - up/down arrows command history
 - left/right arrows to move cursor
-- backspace at cursur
+- backspace at cursor
 - insert characters at cursor
 - Ctrl-A - move cursor to first character
 - Ctrl-E - move cursor to the end
